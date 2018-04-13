@@ -1,0 +1,4 @@
+{
+    "python.linting.lintOnSave":  "True",
+    "files.autoSave": "True"
+}
