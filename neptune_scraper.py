@@ -84,7 +84,6 @@ def ScrapeWeb(webURL, kount):
     except:
         return
    
-
 if __name__ == "__main__":
     """
     try:
