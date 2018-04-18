@@ -1,5 +1,7 @@
 import loadweb
+import itertools
 from bs4 import BeautifulSoup
+
 #import UserDict
 
 CigarModel = {
@@ -24,7 +26,7 @@ CigarModel = {
             "productURL": ""
         }
 cigars = []
-r = 0
+#kount = 0
 
 def ProcessCigarItem(cigarItemTag):
     cigar = CigarModel
@@ -40,7 +42,7 @@ def ProcessCigarItem(cigarItemTag):
     except:
         productID = ""
 
-    if not productID == "":
+    if productID != "":
         productID = productID.replace("btn", "")
 
     try:
@@ -66,9 +68,7 @@ def ProcessCigarItem(cigarItemTag):
     cigars.append(cigar)
     #"""
 
-def ScrapeWeb(webURL):
-    #r = r + 1
-    #print(r)
+def ScrapeWeb(webURL, kount):
     #request = loadweb.LoadWeb(("http://neptune.cigar:7070")
     request = loadweb.LoadWeb(webURL)
     soup = BeautifulSoup(request.content, 'html.parser')
@@ -76,30 +76,48 @@ def ScrapeWeb(webURL):
     for prod in soup.findAll("div", {"class": "product_item"}):
         ProcessCigarItem(prod)
 
-#"""
-    #TO DO
-    
-    #print("Ready for NEXT!")
-    for nextPage in soup.findAll("a", {"class": "pagination_buttons"})[-1].parent:
-        #print(nextPage.get("href"))
-        if not nextPage == None:
-            print(nextPage.get("href"))
-            ScrapeWeb("https://www.neptunecigar.com" + nextPage.get("href"))
-        else:
-            return ""
-
-        """
-         if r==3:
-            print("got here!")
-            
-            print(cigars)
-            exit
-        """
-        #print(nextPage.get("href"))
-#""" 
-
-
+    kount = kount + 2
+    searchPart = "%s&amp;pg=%s" % (1000, kount)  # (str(1000), str(kount))
+    strHref = "https://www.neptunecigar.com/search?text=cigar%20list&amp;nb=" + searchPart
+    try:
+        ScrapeWeb(strHref, kount)
+    except:
+        return
+   
 if __name__ == "__main__":
-    #("http://neptune.cigar:7070")
-    ScrapeWeb("https://www.neptunecigar.com/deals/spring-2018-sampler-sale")
+    """
+    try:
+        searchPart = "%s&amp;pg=%s" % (40, kount)  # (str(1000), str(kount))
+        strHref = "https://www.neptunecigar.com/search?text=cigar%20list&amp;nb=" + searchPart
+        ScrapeWeb(strHref, kount)
+        except:
+            print("Oooh! Some error")
+        finally:
+            print(cigars)
+    """
+
+    # maximum number of consecutive download errors allowed
+    max_errors = 5
+    # current number of consecutive download errors
+    num_errors = 0
+    for page in itertools.count(1):
+        searchPart = "%d&amp;pg=%d" % (12, page)
+        url = 'https://www.neptunecigar.com/search?text=cigar%20list&amp;nb=' + searchPart
+        html = loadweb.LoadWeb(url)
+        if html is None:
+            # received an error trying to download this webpage
+            num_errors += 1
+            if num_errors == max_errors:
+                # reached maximum number of
+                # consecutive errors so exit
+                break
+        else:
+            # success - can scrape the result
+            # ...
+            soup = BeautifulSoup(html.content, 'html.parser')
+            for prod in soup.findAll("div", {"class": "product_item"}):
+                ProcessCigarItem(prod)
+
+            num_errors = 0
+
     print(cigars)
